@@ -1,0 +1,18 @@
+1	विकसित	_	Comp6_Start	_	_	4	Tatpurusha	4	8
+2	शत	_	Comp6_Middle	_	_	3	Bahuvrihi	3	8
+3	पत्र	_	Comp6_Middle	_	_	4	Tatpurusha	4	8
+4	वु	_	Comp6_Middle	_	_	6	Bahuvrihi	6	8
+5	रक्त	_	Comp6_Middle	_	_	6	Tatpurusha	6	8
+6	नेत्रः	_	Comp6_End	_	_	8	Comp_root	8	8
+7	वु	_	CompNo	_	_	8	No_rel	8	8
+8	DUMMY	_	CompNo	_	_	0	root	0	0
+
+1	तस्याम्च	_	CompNo	_	_	9	No_rel	9	9
+2	तीर	_	Comp6_Start	_	_	3	Bahuvrihi	3	9
+3	आदि	_	Comp6_Middle	_	_	4	Bahuvrihi	4	9
+4	रूप	_	Comp6_Middle	_	_	5	Tatpurusha	5	9
+5	संबन्धि	_	Comp6_Middle	_	_	6	Tatpurusha	6	9
+6	स्मृति	_	Comp6_Middle	_	_	7	Tatpurusha	7	9
+7	जनक	_	Comp6_End	_	_	9	Comp_root	9	9
+8	त्वमपि	_	CompNo	_	_	9	No_rel	9	9
+9	DUMMY	_	CompNo	_	_	0	root	0	0
