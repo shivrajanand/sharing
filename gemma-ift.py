@@ -14,7 +14,7 @@ early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=3)
 
 TRAIN_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/Train_withoutContext_coarse.csv"
 TEST_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/Test_withoutContext_coarse.csv"
-OUT_DIR = "/home/shivraj-pg/DEPNECT/OUT_gemma4B"
+OUT_DIR = "/home/shivraj-pg/DEPNECT/OUT_gemma27B"
 
 MAX_SEQ = 1024
 R, ALPHA = 16, 32
@@ -69,8 +69,10 @@ print("Train:", len(train_ds), "Eval:", len(eval_ds))
 
 # -------- model --------------
 
-model, tokenizer = FastModel.from_pretrained(
-    model_name="google/gemma-3-4b-it",
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="google/gemma-3-27b-it",
+    device_map="auto",
+    # model_name="google/gemma-3-27b-it",
     max_seq_length=MAX_SEQ,
     load_in_4bit=False,
     load_in_8bit=False,
@@ -78,6 +80,9 @@ model, tokenizer = FastModel.from_pretrained(
     full_finetuning=False,
 
 )
+
+model = model.to_empty(device="cuda")
+model.load_weights()
 
 model = FastModel.get_peft_model(
     model,
@@ -129,22 +134,18 @@ trainer.train(resume_from_checkpoint=False)
 trainer.save_model(OUT_DIR)
 tokenizer.save_pretrained(OUT_DIR)
 
-# ---------- inference (no length cap) ----------
-test_df = pd.read_csv(TEST_CSV)
-if "model_out" not in test_df.columns:
-    test_df["model_out"] = ""
-
 FastLanguageModel.for_inference(model)
 
 
 def get_compound(sentence):
     prompt = TEMPLATE.format(
-        system=SYSTEM, source=sentence.strip(), sandhi="", compound_types="")
+        system=SYSTEM, sentence=sentence.strip(), sandhi="", compound_types=""
+    )
     inputs = tokenizer([prompt], return_tensors="pt").to(model.device)
     with torch.no_grad():
         out = model.generate(
             **inputs,
-            max_new_tokens=4096,
+            max_new_tokens=None,
             temperature=0.25,
             top_p=0.9,
             do_sample=True,
@@ -154,15 +155,22 @@ def get_compound(sentence):
         )
     return tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
 
+# ---------- inference (no length cap) ----------
+test_df = pd.read_csv(TEST_CSV)
+# Ensure model output column exists
+if "model_out" not in test_df.columns:
+    test_df["model_out"] = ""
 
+# Iterate through the test dataset and generate compound information
 print("Generating compound info...")
 for idx in tqdm(test_df.index, desc="compound"):
-    src = str(test_df.at[idx, "sentence"])
-    if pd.isna(src):
+    src = str(test_df.at[idx, "sentence"]).strip()
+    if pd.isna(src) or src == "":
         test_df.at[idx, "model_out"] = "NO_SOURCE"
         continue
     test_df.at[idx, "model_out"] = get_compound(src)
 
+# Save the predictions
 out_csv = TEST_CSV.replace(".csv", "_gemma3-4b-modelOut.csv")
 test_df.to_csv(out_csv, index=False)
 print("Predictions saved to:", out_csv)
