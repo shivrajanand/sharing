@@ -12,11 +12,11 @@ from transformers import EarlyStoppingCallback
 
 early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=3)
 
-TRAIN_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/Train_withoutContext_coarse.csv"
-TEST_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/Test_withoutContext_coarse.csv"
-OUT_DIR = "/home/shivraj-pg/DEPNECT/OUT_gemma27B"
+TRAIN_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/without_context_coarse_train.csv"
+TEST_CSV = "/home/shivraj-pg/DEPNECT/DATASETS/without_context_coarse_ashtangrudyam.csv"
+OUT_DIR = "/home/shivraj-pg/DEPNECT/OUT_gemma4B_new"
 
-MAX_SEQ = 1024
+MAX_SEQ = 4096
 R, ALPHA = 16, 32
 DROPOUT = 0.05
 LR = 2e-4
@@ -27,35 +27,104 @@ SAVE_STEPS = 250
 LOG_STEPS = 50
 
 SYSTEM = """
-You are an expert in Sanskrit grammar, who identifies and classifies compounds in the given Sanskrit sentence. You will be given the original sentence and the sentence with each compounded word is broken down 
+You are an expert in Sanskrit grammar, who identifies and classifies compounds in the given Sanskrit sentence. You will be given the original sentence. First break the sentence in compounds.
 Follow these rules strictly:
- 1. Output only a single line in the format: `1 विकसित Comp6_Start 4 Tatpurusha`
- example: `'1 स Comp2_Start 2 Bahuvrihi\n2 सर्षपं Comp2_End 11 Comp_root...'`
- 2. Only use the following **4 compound types**. Do **not** invent or include other types:
-- **Tatpurusha**: An endocentric compound where the first element (the attributive) determines the second.
-- **Avyayibhava**: An adverbial compound made of an indeclinable element and a noun, expressing an adverbial meaning.
- - **Dvandva**: A copulative compound where two or more noun stems are joined by 'and'.
-- **Bahuvrihi**: An exocentric compound that describes something by referring to its parts.
-3. The sentence may contain **nested compounds** or **non-compounded words** — handle appropriately.
-4. Maintain strict formatting and provide **only the answer line**. Do not include explanations.
-5. The start or end indexes must not exceed the number of words in the sentence.
-6. Answer in the latin script only, there shouldn't be any devnagari in the answer
+1. Only use the following 4 compound types. Do not invent or include other types:
+    - Tatpurusha: An endocentric compound where the first element (the attributive) determines the second.
+    - Avyayibhava: An adverbial compound made of an indeclinable element and a noun, expressing an adverbial meaning.
+    - Dvandva: A copulative compound where two or more noun stems are joined by 'and'.
+    - Bahuvrihi: An exocentric compound that describes something by referring to its parts.
+2. The sentence may contain nested compounds or non-compounded words — handle appropriately.
+3. Maintain strict formatting and provide only the answer line. Do not include explanations.
+4. The start or end indexes must not exceed the number of words in the sentence.
+5. Answer in the devnagri script only, there shouldn't be any latin in the answer
 
+Text:
+{INPUT}
+
+Return strictly in JSON with keys:
+{
+  "tokens": [...],
+  "compounds": [
+    {
+      "span": [start_token_index, end_token_index],
+      "label": "<Samasa_type>"
+    }
+  ]
+}
+
+Rules:
+- Tokenize by meaningful Sanskrit units.
+- span = inclusive of start index, exclusive of end index.
+- If multiple nested samāsa exist, include all.
+- If none, return empty lists for compounds.
+- Do not output anything outside JSON.
+
+
+Example 1:
+Input: ससर्षपंतुम्बुरुधान्यवन्यंचण्डांचचूर्णानिसमानिकुर्यात्DUMMY
+Output:
+{'tokens': ['स', 'सर्षपं', 'तुम्बुरु', 'धान्य', 'वन्यं', 'चण्डां', 'च', 'चूर्णानि', 'समानि', 'कुर्यात्', 'DUMMY'], 
+'compounds': [
+    {'span': ['1', '2'], 'label': 'Bahuvrihi'}, 
+    {'span': ['2', '11'], 'label': 'Comp_root'}, 
+    {'span': ['3', '5'], 'label': 'Dvandva'}, 
+    {'span': ['4', '5'], 'label': 'Dvandva'}, 
+    {'span': ['5', '11'], 'label': 'Comp_root'}, 
+    {'span': ['6', '11'], 'label': 'No_rel'}, 
+    {'span': ['7', '11'], 'label': 'No_rel'}, 
+    {'span': ['8', '11'], 'label': 'No_rel'}, 
+    {'span': ['9', '11'], 'label': 'No_rel'}, 
+    {'span': ['10', '11'], 'label': 'No_rel'}, 
+    {'span': ['11', '0'], 'label': 'root'}]}
+   
+Example 2:
+Input: आपाततसामान्याइवप्रतीयमानाएतेयदिसूक्ष्मम्निरीक्ष्येरन्तर्हिएतेषाम्हृत्अन्तस्थसंकटबोधDUMMY
+Output:
+{'tokens': ['आपातत', 'सामान्या', 'इव', 'प्रतीयमाना', 'एते', 'यदि', 'सूक्ष्मम्', 'निरीक्ष्येरन्', 'तर्हि', 'एतेषाम्', 'हृत्', 'अन्त', 'स्थ', 'संकट', 'बोध', 'DUMMY'], 
+'compounds': [
+    {'span': ['1', '16'], 'label': 'No_rel'}, 
+    {'span': ['2', '16'], 'label': 'No_rel'}, 
+    {'span': ['3', '16'], 'label': 'No_rel'}, 
+    {'span': ['4', '16'], 'label': 'No_rel'}, 
+    {'span': ['5', '16'], 'label': 'No_rel'}, 
+    {'span': ['6', '16'], 'label': 'No_rel'}, 
+    {'span': ['7', '16'], 'label': 'No_rel'}, 
+    {'span': ['8', '16'], 'label': 'No_rel'}, 
+    {'span': ['9', '16'], 'label': 'No_rel'}, 
+    {'span': ['10', '16'], 'label': 'No_rel'}, 
+    {'span': ['11', '12'], 'label': 'Tatpurusha'}, 
+    {'span': ['12', '13'], 'label': 'Tatpurusha'}, 
+    {'span': ['13', '16'], 'label': 'Comp_root'}, 
+    {'span': ['14', '15'], 'label': 'Tatpurusha'}, 
+    {'span': ['15', '16'], 'label': 'Comp_root'}, 
+    {'span': ['16', '0'], 'label': 'root'}]}
+    
+Input: सःचनविशिष्टवैशिष्ट्यअवगाहीDUMMY
+Output:
+{'tokens': ['सः', 'च', 'न', 'विशिष्ट', 'वैशिष्ट्य', 'अवगाही', 'DUMMY'], 
+'compounds': [
+    {'span': ['1', '7'], 'label': 'No_rel'}, 
+    {'span': ['2', '7'], 'label': 'No_rel'}, 
+    {'span': ['3', '7'], 'label': 'No_rel'}, 
+    {'span': ['4', '5'], 'label': 'Tatpurusha'}, 
+    {'span': ['5', '6'], 'label': 'Tatpurusha'}, 
+    {'span': ['6', '7'], 'label': 'Comp_root'}, 
+    {'span': ['7', '0'], 'label': 'root'}]}
 """
 
-TEMPLATE = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system}<|eot_id|>\n<|start_header_id|>user<|end_header_id|>Sanskrit text:{sentence}\n<|eot_id|><|start_header_id|>assistant<|end_header_id|>Sandhi-Text: {sandhi}\nCompoundTypes:{compound_types}\n<|eot_id|>"""
+TEMPLATE = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system}<|eot_id|>\n<|start_header_id|>user<|end_header_id|>Now analyze:{INPUT}\n<|eot_id|><|start_header_id|>assistant<|end_header_id|>Answer: {OUTPUT}<|eot_id|>"""
 # ---------- dataset sanitiser ----------
 
 
 def csv_to_ds(path):
     df = pd.read_csv(
-        path)[["sentence", "sandhied-sent", "compound-info"]].dropna()
+        path)[["sentence", "gold"]].dropna()
     texts = []
     for _, r in df.iterrows():
         txt = TEMPLATE.format(system=SYSTEM,
-                              sentence=str(r["sentence"]).strip(),
-                              sandhi=str(r["sandhied-sent"]).strip(),
-                              compound_types=str(r["compound-info"].strip()))
+                              INPUT=str(r["sentence"]).strip(),
+                              OUTPUT=str(r["gold"]).strip())
         texts.append(txt)
     return Dataset.from_dict({"text": texts})
 
@@ -70,7 +139,7 @@ print("Train:", len(train_ds), "Eval:", len(eval_ds))
 # -------- model --------------
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="google/gemma-3-27b-it",
+    model_name="google/gemma-3-4b-it",
     device_map="auto",
     # model_name="google/gemma-3-27b-it",
     max_seq_length=MAX_SEQ,
@@ -82,7 +151,6 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 )
 
 model = model.to_empty(device="cuda")
-model.load_weights()
 
 model = FastModel.get_peft_model(
     model,
@@ -139,13 +207,13 @@ FastLanguageModel.for_inference(model)
 
 def get_compound(sentence):
     prompt = TEMPLATE.format(
-        system=SYSTEM, sentence=sentence.strip(), sandhi="", compound_types=""
+        system=SYSTEM, INPUT=sentence.strip(), OUTPUT=""
     )
     inputs = tokenizer([prompt], return_tensors="pt").to(model.device)
     with torch.no_grad():
         out = model.generate(
             **inputs,
-            max_new_tokens=None,
+            max_new_tokens=2048,
             temperature=0.25,
             top_p=0.9,
             do_sample=True,
@@ -154,6 +222,7 @@ def get_compound(sentence):
             repetition_penalty=1.05,
         )
     return tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+
 
 # ---------- inference (no length cap) ----------
 test_df = pd.read_csv(TEST_CSV)
@@ -171,7 +240,7 @@ for idx in tqdm(test_df.index, desc="compound"):
     test_df.at[idx, "model_out"] = get_compound(src)
 
 # Save the predictions
-out_csv = TEST_CSV.replace(".csv", "_gemma3-4b-modelOut.csv")
+out_csv = TEST_CSV.replace(".csv", "_gemma3-4b-modelOut-new.csv")
 test_df.to_csv(out_csv, index=False)
 print("Predictions saved to:", out_csv)
 

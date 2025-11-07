@@ -15,7 +15,7 @@ BATCH_SIZE = 16  # adjust based on GPU memory
 # Load model and tokenizer
 # ---------------------
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="/home/shivraj-pg/DEPNECT/OUT_gemma4B/checkpoint-1500",
+    model_name="google/gemma-4b-it",
     max_seq_length=1024,
     load_in_4bit=False,
     load_in_8bit=False,
