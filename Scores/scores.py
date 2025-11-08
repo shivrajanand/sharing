@@ -1,3 +1,8 @@
+"""
+How to run:
+! python3 scores.py /home/shivraj-pg/DEPNECT/Scores/test.csv gold_col model-output-col
+"""
+
 import json
 import pandas as pd
 import sys
