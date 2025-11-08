@@ -1,0 +1,7 @@
+2025-11-08 14:38:06.946109Corpus-level summary on: 
+Filepath: /home/shivraj-pg/DEPNECT/Model_Outputs/without_context_coarse_test_gemma3-4B-it_pred_pipeline.csv
+Gold-Col: gold
+Model-Output-Column: cleaned
+{'USS': 0.0714, 'LSS': 0.0215, 'EM': 0.0}
+#########################################################
+
