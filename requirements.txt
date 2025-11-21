@@ -19,6 +19,7 @@ certifi==2025.8.3
 cffi==2.0.0
 charset-normalizer==3.4.3
 cloudpickle==3.1.1
+cmake==4.1.2
 comm==0.2.3
 compressed-tensors==0.11.0
 conllu==6.0.0
@@ -44,7 +45,7 @@ fastapi-cli==0.0.14
 fastapi-cloud-cli==0.3.1
 fastrlock==0.8.3
 filelock==3.19.1
-flash_attn==2.7.3
+flash_attn==2.8.3
 fonttools==4.59.1
 frozendict==2.4.6
 frozenlist==1.7.0
@@ -72,6 +73,7 @@ jupyter_client==8.6.3
 jupyter_core==5.8.1
 kiwisolver==1.4.9
 lark==1.2.2
+llama_cpp_python==0.3.16
 llguidance==0.7.30
 llvmlite==0.44.0
 lm-format-enforcer==0.11.3
@@ -115,6 +117,7 @@ packaging==25.0
 pandas==2.3.1
 parso==0.8.4
 partial-json-parser==0.2.1.1.post6
+pathspec==0.12.1
 peft==0.17.1
 pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1733301927746/work
 pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1733327343728/work
@@ -159,6 +162,7 @@ rouge-score==0.1.2
 rpds-py==0.27.1
 safetensors==0.6.2
 scikit-learn==1.7.1
+scikit_build_core==0.11.6
 scipy==1.15.3
 seaborn==0.13.2
 sentencepiece==0.2.0
@@ -176,6 +180,7 @@ sympy==1.14.0
 threadpoolctl==3.6.0
 tiktoken==0.12.0
 tokenizers==0.22.0
+tomli==2.3.0
 torch==2.8.0
 torchao==0.13.0
 torchaudio==2.8.0
@@ -189,7 +194,7 @@ trl==0.23.0
 typeguard==4.4.4
 typer==0.20.0
 typing-inspection==0.4.2
-typing_extensions==4.14.1
+typing_extensions==4.15.0
 tyro==0.9.35
 tzdata==2025.2
 unsloth==2025.10.6

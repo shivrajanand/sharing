@@ -5,3 +5,10 @@ Model-Output-Column: cleaned
 {'USS': 0.0714, 'LSS': 0.0215, 'EM': 0.0}
 #########################################################
 
+2025-11-08 20:32:04.602938Corpus-level summary on: 
+Filepath: /home/shivraj-pg/DEPNECT/Scores/without_context_coarse_test_gemma3-4B-it_pred_no_whitespacenewline.csv
+Gold-Col: gold
+Model-Output-Column: cleaned
+{'USS': 0.0714, 'LSS': 0.0215, 'EM': 0.0}
+#########################################################
+
